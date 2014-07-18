@@ -15,6 +15,13 @@ func eff(command Command) func(Note) Note {
 }
 
 func main() {
-	runner := NewStateT().Of(NewSum(1)).Map(eff(AddCommand{}))
-	fmt.Println(runner.Run(NewSum(1)))
+	note := NewSum(1)
+
+	runner := NewStateT().Of(NewSum(1)).
+		Map(eff(AddCommand{})).
+		Map(eff(AddCommand{})).
+		Map(eff(AddCommand{}))
+
+	fmt.Println("Eval :", runner.EvalState(note))
+	fmt.Println("Exec :", runner.ExecState(note))
 }

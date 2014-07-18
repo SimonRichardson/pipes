@@ -28,8 +28,9 @@ func (x StateT) Chain(f func(Note) StateT) StateT {
 		mon: x.mon,
 		Run: func(a Note) Validation {
 			res := x.Run(a)
-			return res.Chain(func(t Tuple) Validation {
-				return f(t._1).Run(t._2)
+			return res.Chain(func(t Any) Validation {
+				tup := t.(Tuple)
+				return f(tup._1).Run(tup._2)
 			})
 		},
 	}
@@ -38,5 +39,17 @@ func (x StateT) Chain(f func(Note) StateT) StateT {
 func (x StateT) Map(f func(Note) Note) StateT {
 	return x.Chain(func(a Note) StateT {
 		return x.Of(f(a))
+	})
+}
+
+func (x StateT) EvalState(s Note) Validation {
+	return x.Run(s).Map(func(t Any) Any {
+		return t.(Tuple)._1
+	})
+}
+
+func (x StateT) ExecState(s Note) Validation {
+	return x.Run(s).Map(func(t Any) Any {
+		return t.(Tuple)._2
 	})
 }

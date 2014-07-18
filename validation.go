@@ -1,51 +1,51 @@
 package main
 
 type Validation interface {
-	Of(v Tuple) Validation
-	Chain(f func(v Tuple) Validation) Validation
-	Map(f func(v Tuple) Tuple) Validation
+	Of(v Any) Validation
+	Chain(f func(v Any) Validation) Validation
+	Map(f func(v Any) Any) Validation
 }
 
 type Success struct {
-	x Tuple
+	x Any
 }
 
-func NewSuccess(x Tuple) Success {
+func NewSuccess(x Any) Success {
 	return Success{
 		x: x,
 	}
 }
 
-func (x Success) Of(v Tuple) Validation {
+func (x Success) Of(v Any) Validation {
 	return NewSuccess(v)
 }
 
-func (x Success) Chain(f func(v Tuple) Validation) Validation {
+func (x Success) Chain(f func(v Any) Validation) Validation {
 	return f(x.x)
 }
 
-func (x Success) Map(f func(v Tuple) Tuple) Validation {
-	return NewSuccess(f(x.x))
+func (x Success) Map(f func(v Any) Any) Validation {
+	return x.Of(f(x.x))
 }
 
 type Failure struct {
-	x Tuple
+	x Any
 }
 
-func NewFailure(x Tuple) Failure {
+func NewFailure(x Any) Failure {
 	return Failure{
 		x: x,
 	}
 }
 
-func (x Failure) Of(v Tuple) Validation {
+func (x Failure) Of(v Any) Validation {
 	return NewSuccess(v)
 }
 
-func (x Failure) Chain(f func(v Tuple) Validation) Validation {
+func (x Failure) Chain(f func(v Any) Validation) Validation {
 	return x
 }
 
-func (x Failure) Map(f func(v Tuple) Tuple) Validation {
+func (x Failure) Map(f func(v Any) Any) Validation {
 	return NewFailure(x.x)
 }
