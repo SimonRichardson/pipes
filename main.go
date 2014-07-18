@@ -4,13 +4,14 @@ import "fmt"
 
 type AddCommand struct{}
 
-func (c AddCommand) Execute(note Note) Note {
-	return note.(Sum).Concat(NewSum(1))
+func (c AddCommand) Execute(note Note) CommandResult {
+	return ContinueResult(note.(Sum).Concat(NewSum(1)))
 }
 
 func eff(command Command) func(Note) Note {
 	return func(note Note) Note {
-		return command.Execute(note)
+		res := command.Execute(note)
+		return res.Note
 	}
 }
 
