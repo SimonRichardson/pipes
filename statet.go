@@ -53,3 +53,34 @@ func (x StateT) ExecState(s Note) Validation {
 		return t.(Tuple)._2
 	})
 }
+
+func StateGet() StateT {
+	return StateT{
+		mon: Success{},
+		Run: func(s Note) Validation {
+			return NewSuccess(NewTuple(s, s))
+		},
+	}
+}
+
+func StateModify(f func(Note) Note) StateT {
+	return StateT{
+		mon: Success{},
+		Run: func(s Note) Validation {
+			return NewSuccess(NewTuple(s, f(s)))
+		},
+	}
+}
+
+func StateReshape(f func(Note) Validation) StateT {
+	return StateT{
+		mon: Success{},
+		Run: f,
+	}
+}
+
+func StatePut(s Note) StateT {
+	return StateModify(func(a Note) Note {
+		return s
+	})
+}
