@@ -72,10 +72,12 @@ func StateModify(f func(Note) Note) StateT {
 	}
 }
 
-func StateReshape(f func(Note) Validation) StateT {
+func StateInject(a Validation) StateT {
 	return StateT{
 		mon: Success{},
-		Run: f,
+		Run: func(b Note) Validation {
+			return a
+		},
 	}
 }
 

@@ -49,3 +49,10 @@ func (x Failure) Chain(f func(v Any) Validation) Validation {
 func (x Failure) Map(f func(v Any) Any) Validation {
 	return NewFailure(x.x)
 }
+
+func ValidationFromBool(b bool, val Note) Validation {
+	if b {
+		return NewSuccess(val)
+	}
+	return NewFailure(val)
+}

@@ -15,3 +15,10 @@ func ContinueResult(note Note) CommandResult {
 		Note:     note,
 	}
 }
+
+func BreakResult(note Note) CommandResult {
+	return CommandResult{
+		Continue: false,
+		Note:     note,
+	}
+}
