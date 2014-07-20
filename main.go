@@ -39,4 +39,9 @@ func main() {
 
 	fmt.Println("Eval :", runner.EvalState(note))
 	fmt.Println("Exec :", runner.ExecState(note))
+
+	fmt.Println("-------")
+
+	free := Suspend{}.Lift(NewId(1))
+	fmt.Println(free.Run())
 }
