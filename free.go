@@ -2,17 +2,19 @@ package main
 
 type Free interface {
 	Of(x Any) Free
+	Chain(f func(Any) Free) Free
+
 	Resume() Validation
 	Run() Any
 }
 
 type Suspend struct {
-	x Validation
+	x Id
 }
 
-func NewSuspend(x Any) Suspend {
+func NewSuspend(x Id) Suspend {
 	return Suspend{
-		x: NewFailure(x),
+		x: x,
 	}
 }
 
@@ -20,8 +22,14 @@ func (f Suspend) Of(x Any) Free {
 	return NewReturn(x)
 }
 
+func (f Suspend) Chain(x func(Any) Free) Free {
+	return NewSuspend(f.x.Map(func(y Any) Any {
+		return y.(Free).Chain(x)
+	}))
+}
+
 func (f Suspend) Resume() Validation {
-	return f.x
+	return NewFailure(f.x)
 }
 
 func (f Suspend) Run() Any {
@@ -37,12 +45,12 @@ func (f Suspend) Lift(x Id) Free {
 }
 
 type Return struct {
-	x Validation
+	x Any
 }
 
 func NewReturn(x Any) Return {
 	return Return{
-		x: NewSuccess(x),
+		x: x,
 	}
 }
 
@@ -50,8 +58,12 @@ func (f Return) Of(x Any) Free {
 	return NewReturn(x)
 }
 
+func (f Return) Chain(x func(Any) Free) Free {
+	return x(f.x)
+}
+
 func (f Return) Resume() Validation {
-	return f.x
+	return NewSuccess(f.x)
 }
 
 func (f Return) Run() Any {

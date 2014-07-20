@@ -42,6 +42,6 @@ func main() {
 
 	fmt.Println("-------")
 
-	free := Suspend{}.Lift(NewId(1))
+	free := NewSuspend(NewId(1))
 	fmt.Println(free.Run())
 }
