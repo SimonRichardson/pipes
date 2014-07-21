@@ -3,6 +3,7 @@ package main
 type Free interface {
 	Of(x Any) Free
 	Chain(f func(Any) Free) Free
+	Map(x func(Any) Any) Free
 
 	Resume() Validation
 	Run() Any
@@ -26,6 +27,12 @@ func (f Suspend) Chain(x func(Any) Free) Free {
 	return NewSuspend(f.x.Map(func(y Any) Any {
 		return y.(Free).Chain(x)
 	}))
+}
+
+func (f Suspend) Map(x func(Any) Any) Free {
+	return f.Chain(func(y Any) Free {
+		return f.Of(x(y))
+	})
 }
 
 func (f Suspend) Resume() Validation {
@@ -60,6 +67,12 @@ func (f Return) Of(x Any) Free {
 
 func (f Return) Chain(x func(Any) Free) Free {
 	return x(f.x)
+}
+
+func (f Return) Map(x func(Any) Any) Free {
+	return f.Chain(func(y Any) Free {
+		return f.Of(x(y))
+	})
 }
 
 func (f Return) Resume() Validation {

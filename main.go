@@ -42,6 +42,17 @@ func main() {
 
 	fmt.Println("-------")
 
-	free := NewSuspend(NewId(1))
-	fmt.Println(free.Run())
+	free := Suspend{}
+	free1 := free.Lift(NewId(1))
+	free2 := free.Lift(NewId(2))
+	free3 := free.Lift(NewId(3))
+
+	res := free1.Chain(func(x Any) Free {
+		return free2.Chain(func(y Any) Free {
+			return free3.Map(func(z Any) Any {
+				return x.(int) + y.(int) + z.(int)
+			})
+		})
+	})
+	fmt.Println(res.Run())
 }
