@@ -24,7 +24,7 @@ func mapEff(command Command) func(Note) Note {
 func chainEff(command Command) func(Note) StateT {
 	return func(note Note) StateT {
 		res := command.Execute(note)
-		return StateInject(ValidationFromBool(res.Continue, NewTuple(note, res.Note)))
+		return StateInject(EitherFromBool(res.Continue, NewTuple(note, res.Note)))
 	}
 }
 
@@ -55,4 +55,16 @@ func main() {
 		})
 	})
 	fmt.Println(res.Run())
+	/*
+		limit := 1000
+
+		g := func(a int) Free {
+			if a < limit {
+				return NewSuspend(x)
+			} else {
+				return NewReturn(a)
+			}
+		}
+		fmt.Println(g(1).Run())
+	*/
 }

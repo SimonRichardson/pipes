@@ -1,11 +1,13 @@
 package main
 
+import "fmt"
+
 type Free interface {
 	Of(x Any) Free
 	Chain(f func(Any) Free) Free
 	Map(x func(Any) Any) Free
 
-	Resume() Validation
+	Resume() Either
 	Run() Any
 }
 
@@ -35,8 +37,8 @@ func (f Suspend) Map(x func(Any) Any) Free {
 	})
 }
 
-func (f Suspend) Resume() Validation {
-	return NewFailure(f.x)
+func (f Suspend) Resume() Either {
+	return NewLeft(f.x)
 }
 
 func (f Suspend) Run() Any {
@@ -75,8 +77,8 @@ func (f Return) Map(x func(Any) Any) Free {
 	})
 }
 
-func (f Return) Resume() Validation {
-	return NewSuccess(f.x)
+func (f Return) Resume() Either {
+	return NewRight(f.x)
 }
 
 func (f Return) Run() Any {
@@ -92,9 +94,11 @@ func run(x Free, f func(Any) Free) Any {
 		res = res.Bimap(
 			func(x Any) Any {
 				cont = false
+				fmt.Println("Return", x)
 				return x
 			},
 			func(x Any) Any {
+				fmt.Println("Suspend", x)
 				return f(x).Resume()
 			},
 		)

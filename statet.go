@@ -1,14 +1,14 @@
 package main
 
 type StateT struct {
-	mon Validation
-	Run func(Note) Validation
+	mon Either
+	Run func(Note) Either
 }
 
 func NewStateT() StateT {
 	return StateT{
-		mon: Success{},
-		Run: func(x Note) Validation {
+		mon: Right{},
+		Run: func(x Note) Either {
 			return nil
 		},
 	}
@@ -17,7 +17,7 @@ func NewStateT() StateT {
 func (x StateT) Of(a Note) StateT {
 	return StateT{
 		mon: x.mon,
-		Run: func(b Note) Validation {
+		Run: func(b Note) Either {
 			return x.mon.Of(NewTuple(a, b))
 		},
 	}
@@ -26,9 +26,9 @@ func (x StateT) Of(a Note) StateT {
 func (x StateT) Chain(f func(Note) StateT) StateT {
 	return StateT{
 		mon: x.mon,
-		Run: func(a Note) Validation {
+		Run: func(a Note) Either {
 			res := x.Run(a)
-			return res.Chain(func(t Any) Validation {
+			return res.Chain(func(t Any) Either {
 				tup := t.(Tuple)
 				return f(tup._1).Run(tup._2)
 			})
@@ -42,13 +42,13 @@ func (x StateT) Map(f func(Note) Note) StateT {
 	})
 }
 
-func (x StateT) EvalState(s Note) Validation {
+func (x StateT) EvalState(s Note) Either {
 	return x.Run(s).Map(func(t Any) Any {
 		return t.(Tuple)._1
 	})
 }
 
-func (x StateT) ExecState(s Note) Validation {
+func (x StateT) ExecState(s Note) Either {
 	return x.Run(s).Map(func(t Any) Any {
 		return t.(Tuple)._2
 	})
@@ -56,26 +56,26 @@ func (x StateT) ExecState(s Note) Validation {
 
 func StateGet() StateT {
 	return StateT{
-		mon: Success{},
-		Run: func(s Note) Validation {
-			return NewSuccess(NewTuple(s, s))
+		mon: Right{},
+		Run: func(s Note) Either {
+			return NewRight(NewTuple(s, s))
 		},
 	}
 }
 
 func StateModify(f func(Note) Note) StateT {
 	return StateT{
-		mon: Success{},
-		Run: func(s Note) Validation {
-			return NewSuccess(NewTuple(s, f(s)))
+		mon: Right{},
+		Run: func(s Note) Either {
+			return NewRight(NewTuple(s, f(s)))
 		},
 	}
 }
 
-func StateInject(a Validation) StateT {
+func StateInject(a Either) StateT {
 	return StateT{
-		mon: Success{},
-		Run: func(b Note) Validation {
+		mon: Right{},
+		Run: func(b Note) Either {
 			return a
 		},
 	}
