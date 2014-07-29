@@ -1,4 +1,4 @@
-package main
+package junction
 
 type Id struct {
 	x Any

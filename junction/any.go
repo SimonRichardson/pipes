@@ -1,3 +1,3 @@
-package main
+package junction
 
 type Any interface{}

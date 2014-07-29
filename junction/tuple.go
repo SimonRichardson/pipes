@@ -1,4 +1,4 @@
-package main
+package junction
 
 type Tuple struct {
 	_1 Note

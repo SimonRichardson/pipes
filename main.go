@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	. "github.com/SimonRichardson/pipes/junction"
+)
 
 type AddCommand struct{}
 

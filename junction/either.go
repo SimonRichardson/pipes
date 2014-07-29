@@ -1,4 +1,4 @@
-package main
+package junction
 
 type Either interface {
 	Of(v Any) Either

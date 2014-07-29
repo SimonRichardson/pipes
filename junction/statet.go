@@ -1,4 +1,4 @@
-package main
+package junction
 
 type StateT struct {
 	mon Either
