@@ -1,4 +1,4 @@
-package junction
+package pipes
 
 type Command interface {
 	Execute(Note) CommandResult

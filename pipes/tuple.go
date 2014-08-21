@@ -1,4 +1,4 @@
-package junction
+package pipes
 
 type Tuple struct {
 	_1 []Note

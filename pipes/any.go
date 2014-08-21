@@ -1,3 +1,3 @@
-package junction
+package pipes
 
 type Any interface{}

@@ -1,4 +1,4 @@
-package junction
+package pipes
 
 type Sum struct {
 	x int

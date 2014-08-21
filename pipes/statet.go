@@ -1,4 +1,4 @@
-package junction
+package pipes
 
 type StateT struct {
 	Run func(Note) Either

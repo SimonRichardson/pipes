@@ -2,32 +2,33 @@ package main
 
 import (
 	"fmt"
-	. "github.com/SimonRichardson/pipes/junction"
+
+	"github.com/SimonRichardson/pipes/pipes"
 )
 
 type AddCommand struct{}
 
-func (c AddCommand) Execute(note Note) CommandResult {
-	return ContinueResult(note.(Sum).Concat(NewSum(1)))
+func (c AddCommand) Execute(note pipes.Note) pipes.CommandResult {
+	return pipes.ContinueResult(note.(pipes.Sum).Concat(pipes.NewSum(1)))
 }
 
 type BadCommand struct{}
 
-func (c BadCommand) Execute(note Note) CommandResult {
-	return BreakResult(note)
+func (c BadCommand) Execute(note pipes.Note) pipes.CommandResult {
+	return pipes.BreakResult(note)
 }
 
-func eff(command Command) func(Note) Either {
-	return func(note Note) Either {
+func eff(command pipes.Command) func(pipes.Note) pipes.Either {
+	return func(note pipes.Note) pipes.Either {
 		res := command.Execute(note)
-		return EitherFromBool(res.Continue, NewTuple([]Note{note}, res.Note))
+		return pipes.EitherFromBool(res.Continue, pipes.NewTuple([]pipes.Note{note}, res.Note))
 	}
 }
 
 func main() {
-	note := NewSum(1)
+	note := pipes.NewSum(1)
 
-	program := NewStateT().Of(NewSum(0)).
+	program := pipes.NewStateT().Of(pipes.NewSum(0)).
 		Eff(eff(AddCommand{})).
 		Eff(eff(AddCommand{})).
 		Eff(eff(AddCommand{})).
