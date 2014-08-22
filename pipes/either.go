@@ -69,7 +69,7 @@ func (x Left) Bimap(f func(v Any) Any, g func(v Any) Any) Either {
 	return NewLeft(f(x.x))
 }
 
-func EitherFromBool(b bool, val Note) Either {
+func EitherFromBool(b bool, val Tuple) Either {
 	if b {
 		return NewRight(val)
 	}

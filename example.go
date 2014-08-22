@@ -20,7 +20,7 @@ func (x Sum) Of(v int) Sum {
 	return NewSum(v)
 }
 
-func (x Sum) Empty() Sum {
+func (x Sum) Empty() pipes.Note {
 	return NewSum(0)
 }
 
@@ -55,21 +55,23 @@ func (c BadCommand) Execute(note pipes.Note) pipes.CommandResult {
 }
 
 func main() {
-	note := NewSum(1)
+	commands := []pipes.Command{
+		AddCommand{},
+		AddCommand{},
+		BadCommand{},
+		AddCommand{},
+	}
 
-	program := pipes.NewStateT().Of(Sum{}.Empty()).
-		Eff(pipes.Eff(AddCommand{})).
-		Eff(pipes.Eff(AddCommand{})).
-		Eff(pipes.Eff(BadCommand{})).
-		Eff(pipes.Eff(AddCommand{}))
+	runner := pipes.NewRunner(commands)
+	res := runner.Execute(NewSum(1))
 
-	program.Run(note).Bimap(
+	res.Bimap(
 		func(x pipes.Any) pipes.Any {
-			fmt.Println("Failed : ", x)
+			fmt.Println("Failed: ", x)
 			return x
 		},
 		func(x pipes.Any) pipes.Any {
-			fmt.Println("Success : ", x)
+			fmt.Println("Success: ", x)
 			return x
 		},
 	)

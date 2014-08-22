@@ -1,3 +1,5 @@
 package pipes
 
-type Note interface{}
+type Note interface {
+	Empty() Note
+}
