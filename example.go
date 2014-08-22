@@ -54,21 +54,23 @@ func (c BadCommand) Execute(note pipes.Note) pipes.CommandResult {
 	return pipes.BreakResult(note)
 }
 
-func eff(command pipes.Command) func(pipes.Note) pipes.Either {
-	return func(note pipes.Note) pipes.Either {
-		res := command.Execute(note)
-		return pipes.EitherFromBool(res.Continue, pipes.NewTuple([]pipes.Note{note}, res.Note))
-	}
-}
-
 func main() {
 	note := NewSum(1)
 
 	program := pipes.NewStateT().Of(Sum{}.Empty()).
-		Eff(eff(AddCommand{})).
-		Eff(eff(AddCommand{})).
-		Eff(eff(AddCommand{})).
-		Eff(eff(AddCommand{}))
+		Eff(pipes.Eff(AddCommand{})).
+		Eff(pipes.Eff(AddCommand{})).
+		Eff(pipes.Eff(BadCommand{})).
+		Eff(pipes.Eff(AddCommand{}))
 
-	fmt.Println(program.Run(note))
+	program.Run(note).Bimap(
+		func(x pipes.Any) pipes.Any {
+			fmt.Println("Failed : ", x)
+			return x
+		},
+		func(x pipes.Any) pipes.Any {
+			fmt.Println("Success : ", x)
+			return x
+		},
+	)
 }

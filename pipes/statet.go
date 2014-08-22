@@ -41,13 +41,15 @@ func (x StateT) Map(f func(Note) Note) StateT {
 func (x StateT) Eff(f func(Note) Either) StateT {
 	return StateT{
 		Run: func(a Note) Either {
-			res := x.Run(a)
-			return res.Chain(func(t Any) Either {
-				tup0 := t.(Tuple)
-				return f(tup0._2).Map(func(x Any) Any {
-					tup1 := x.(Tuple)
-					return NewTuple(append(tup0._1, tup1._1...), tup1._2)
-				})
+			return x.Run(a).Chain(func(t Any) Either {
+				merge := func(t Tuple) func(Any) Any {
+					return func(x Any) Any {
+						tuple := x.(Tuple)
+						return NewTuple(append(t._1, tuple._1...), tuple._2)
+					}
+				}
+				tup := t.(Tuple)
+				return f(tup._2).Bimap(merge(tup), merge(tup))
 			})
 		},
 	}
