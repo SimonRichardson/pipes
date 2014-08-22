@@ -58,7 +58,7 @@ func main() {
 	commands := []pipes.Command{
 		AddCommand{},
 		AddCommand{},
-		BadCommand{},
+		AddCommand{},
 		AddCommand{},
 	}
 
@@ -66,11 +66,11 @@ func main() {
 	res := runner.Execute(NewSum(1))
 
 	res.Bimap(
-		func(x pipes.Any) pipes.Any {
+		func(x pipes.Tuple) pipes.Tuple {
 			fmt.Println("Failed: ", x)
 			return x
 		},
-		func(x pipes.Any) pipes.Any {
+		func(x pipes.Tuple) pipes.Tuple {
 			fmt.Println("Success: ", x)
 			return x
 		},
