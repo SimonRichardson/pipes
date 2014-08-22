@@ -12,10 +12,10 @@ func NewEffect() Effect {
 	}
 }
 
-func (x Effect) Of(a Note) Effect {
+func (x Effect) Empty() Effect {
 	return Effect{
 		Run: func(b Note) Either {
-			return Right{}.Of(NewTuple([]Note{a}, b))
+			return Right{}.Of(NewTuple([]Note{}, b))
 		},
 	}
 }

@@ -11,7 +11,7 @@ func NewRunner(commands []Command) Runner {
 }
 
 func (r Runner) Execute(note Note) Either {
-	program := NewEffect().Of(note.Empty())
+	program := NewEffect().Empty()
 	for _, v := range r.Commands {
 		program = program.Effect(Eff(v))
 	}
