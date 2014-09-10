@@ -55,6 +55,6 @@ func (c BadCommand) Execute(note pipes.Note) pipes.CommandResult {
 }
 
 func main() {
-	runner := EitherT{}.Of(NewSum(1))
-	fmt.Println(runner)
+	runner := pipes.EitherT{}.Of(NewSum(1))
+	fmt.Println(runner.Run.Run())
 }

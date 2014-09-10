@@ -88,10 +88,10 @@ func (e EitherT) Of(x Note) EitherT {
 
 func (e EitherT) Swap() EitherT {
 	return e.Fold(
-		func(l Note) Either {
+		func(l Any) Any {
 			return NewRight(l)
 		},
-		func(r Note) Either {
+		func(r Any) Any {
 			return NewLeft(r)
 		},
 	)
@@ -99,32 +99,34 @@ func (e EitherT) Swap() EitherT {
 
 func (e EitherT) Bimap(f func(Note) Note, g func(Note) Note) EitherT {
 	return e.Fold(
-		func(l Note) Either {
+		func(l Any) Any {
 			return NewLeft(f(l))
 		},
-		func(r Note) Either {
+		func(r Any) Any {
 			return NewRight(g(r))
 		},
 	)
 }
 
-func (e EitherT) Fold(f func(Any) Any, g func(Any) Any) Any {
-	return e.Run.Chain(func(o Either) Writer {
-		return e.Of(o.Fold(f, g))
-	})
+func (e EitherT) Fold(f func(Any) Any, g func(Any) Any) EitherT {
+	return EitherT{
+		Run: e.Run.Chain(func(o Either) Writer {
+			return Writer{}.Of(o.Fold(f, g).(Either))
+		}),
+	}
 }
 
 func (e EitherT) Chain(f func(Note) EitherT) EitherT {
 	return EitherT{
-		Run: e.Run.Chain(func(n Either) {
+		Run: e.Run.Chain(func(n Either) Writer {
 			return n.Fold(
-				func(a Note) Writer {
+				func(a Any) Any {
 					return Writer{}.Of(NewLeft(a))
 				},
-				func(a Note) Writer {
+				func(a Any) Any {
 					return f(a).Run
 				},
-			)
+			).(Writer)
 		}),
 	}
 }
