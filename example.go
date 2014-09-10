@@ -66,12 +66,12 @@ func main() {
 	res := runner.Execute(NewSum(1))
 
 	res.Bimap(
-		func(x pipes.Tuple) pipes.Tuple {
-			fmt.Println("Failed: ", x)
+		func(x pipes.Writer) pipes.Writer {
+			fmt.Println("Failed: ", x.Run())
 			return x
 		},
-		func(x pipes.Tuple) pipes.Tuple {
-			fmt.Println("Success: ", x)
+		func(x pipes.Writer) pipes.Writer {
+			fmt.Println("Success: ", x.Run())
 			return x
 		},
 	)

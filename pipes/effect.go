@@ -15,7 +15,7 @@ func NewEffect() Effect {
 func (x Effect) Empty() Effect {
 	return Effect{
 		Run: func(b Note) Either {
-			return Right{}.Of(NewTuple([]Note{}, b))
+			return Right{}.Of(Writer{}.Of(b))
 		},
 	}
 }
@@ -23,13 +23,25 @@ func (x Effect) Empty() Effect {
 func (x Effect) Effect(f func(Note) Either) Effect {
 	return Effect{
 		Run: func(a Note) Either {
-			return x.Run(a).Chain(func(t Tuple) Either {
-				merge := func(t Tuple) func(Tuple) Tuple {
-					return func(x Tuple) Tuple {
-						return NewTuple(append(t._1, x._1...), x._2)
-					}
-				}
-				return f(t._2).Bimap(merge(t), merge(t))
+			return x.Run(a).Chain(func(t Writer) Either {
+				var e func(Writer) Either
+				w := t.Map(func(n Note) Note {
+					return f(n).Fold(
+						func(a Any) Any {
+							e = func(w Writer) Either {
+								return NewLeft(w)
+							}
+							return a
+						},
+						func(a Any) Any {
+							e = func(w Writer) Either {
+								return NewRight(w)
+							}
+							return a
+						},
+					).(Note)
+				})
+				return e(t)
 			})
 		},
 	}
