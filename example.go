@@ -55,24 +55,6 @@ func (c BadCommand) Execute(note pipes.Note) pipes.CommandResult {
 }
 
 func main() {
-	commands := []pipes.Command{
-		AddCommand{},
-		AddCommand{},
-		AddCommand{},
-		AddCommand{},
-	}
-
-	runner := pipes.NewRunner(commands)
-	res := runner.Execute(NewSum(1))
-
-	res.Bimap(
-		func(x pipes.Writer) pipes.Writer {
-			fmt.Println("Failed: ", x.Run())
-			return x
-		},
-		func(x pipes.Writer) pipes.Writer {
-			fmt.Println("Success: ", x.Run())
-			return x
-		},
-	)
+	runner := EitherT{}.Of(NewSum(1))
+	fmt.Println(runner)
 }
