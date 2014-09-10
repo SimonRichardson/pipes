@@ -17,7 +17,7 @@ func (w Writer) Chain(f func(Either) Writer) Writer {
 		Run: func() Tuple {
 			res := w.Run()
 			t := f(res._1).Run()
-			return NewTuple(t._1, append(res._2, t._2...))
+			return NewTuple(t._1, append(res._2, res._1))
 		},
 	}
 }

@@ -55,6 +55,10 @@ func (c BadCommand) Execute(note pipes.Note) pipes.CommandResult {
 }
 
 func main() {
-	runner := pipes.EitherT{}.Of(NewSum(1))
+	runner := pipes.EitherT{}.Of(NewSum(1)).Map(func(n pipes.Note) pipes.Note {
+		return NewSum(2)
+	}).Map(func(n pipes.Note) pipes.Note {
+		return NewSum(3)
+	})
 	fmt.Println(runner.Run.Run())
 }
