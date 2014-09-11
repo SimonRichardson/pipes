@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/SimonRichardson/pipes/pipes"
 )
@@ -42,6 +43,10 @@ func (x Sum) Concat(y Sum) Sum {
 	})
 }
 
+func (x Sum) String() string {
+	return strconv.Itoa(x.x)
+}
+
 type AddCommand struct{}
 
 func (c AddCommand) Execute(note pipes.Note) pipes.CommandResult {
@@ -55,24 +60,19 @@ func (c BadCommand) Execute(note pipes.Note) pipes.CommandResult {
 }
 
 func main() {
+	// Run the commands manually
+	x := pipes.EitherT{}.Of(NewSum(1)).
+		Eff(pipes.Do(AddCommand{})).
+		Eff(pipes.Do(BadCommand{})).
+		Eff(pipes.Do(AddCommand{}))
+	fmt.Println("Manual : ", x.Run.Run())
+
+	// Run the commands in a runner
 	commands := []pipes.Command{
 		AddCommand{},
-		AddCommand{},
-		AddCommand{},
+		BadCommand{},
 		AddCommand{},
 	}
-
-	runner := pipes.NewRunner(commands)
-	res := runner.Execute(NewSum(1))
-
-	res.Bimap(
-		func(x pipes.Tuple) pipes.Tuple {
-			fmt.Println("Failed: ", x)
-			return x
-		},
-		func(x pipes.Tuple) pipes.Tuple {
-			fmt.Println("Success: ", x)
-			return x
-		},
-	)
+	y := pipes.NewRunner(commands)
+	fmt.Println("Runner : ", y.Exec(NewSum(1)))
 }

@@ -1,19 +1,21 @@
 package pipes
 
 type Runner struct {
-	Commands []Command
+	run func(Note) EitherT
 }
 
 func NewRunner(commands []Command) Runner {
 	return Runner{
-		Commands: commands,
+		run: func(note Note) EitherT {
+			x := EitherT{}.Of(note)
+			for _, v := range commands {
+				x = x.Eff(Do(v))
+			}
+			return x
+		},
 	}
 }
 
-func (r Runner) Execute(note Note) Either {
-	program := NewEffect().Empty()
-	for _, v := range r.Commands {
-		program = program.Effect(Eff(v))
-	}
-	return program.Run(note)
+func (r Runner) Exec(note Note) Tuple {
+	return r.run(note).Run.Run()
 }

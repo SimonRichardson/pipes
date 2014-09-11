@@ -31,9 +31,9 @@ type Parallel struct {
 
 func (c Parallel) Execute(note Note) CommandResult {
 	commands := c.Commands
-	numOfChannels := len(commands)
+	num := len(commands)
 
-	results := make([]CommandResult, numOfChannels, numOfChannels)
+	results := make([]CommandResult, num, num)
 
 	var group sync.WaitGroup
 	for k, v := range commands {
@@ -47,12 +47,12 @@ func (c Parallel) Execute(note Note) CommandResult {
 
 	group.Wait()
 
-	for i := 0; i < numOfChannels; i++ {
+	for i := 0; i < num; i++ {
 		result := results[i]
 		if !result.Continue {
 			return result
 		}
 	}
 
-	return results[numOfChannels-1]
+	return results[num-1]
 }
