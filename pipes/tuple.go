@@ -11,3 +11,11 @@ func NewTuple(a Either, b []Either) Tuple {
 		_2: b,
 	}
 }
+
+func (t Tuple) Fst() Either {
+	return t._1
+}
+
+func (t Tuple) Snd() []Either {
+	return t._2
+}

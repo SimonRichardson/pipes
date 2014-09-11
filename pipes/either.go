@@ -1,5 +1,7 @@
 package pipes
 
+import "fmt"
+
 type Either interface {
 	Of(v Note) Either
 	Chain(f func(v Note) Either) Either
@@ -39,6 +41,10 @@ func (x Right) Bimap(f func(v Note) Note, g func(v Note) Note) Either {
 	return NewRight(g(x.x))
 }
 
+func (x Right) String() string {
+	return fmt.Sprintf("Right (%s)", x.x.(Show).String())
+}
+
 type Left struct {
 	x Note
 }
@@ -67,6 +73,10 @@ func (x Left) Fold(f func(v Any) Any, g func(v Any) Any) Any {
 
 func (x Left) Bimap(f func(v Note) Note, g func(v Note) Note) Either {
 	return NewLeft(f(x.x))
+}
+
+func (x Left) String() string {
+	return fmt.Sprintf("Left (%s)", x.x.(Show).String())
 }
 
 func EitherFromBool(b bool, val Note) Either {
@@ -135,4 +145,19 @@ func (e EitherT) Map(f func(Note) Note) EitherT {
 	return e.Chain(func(a Note) EitherT {
 		return e.Of(f(a))
 	})
+}
+
+func (e EitherT) Eff(f func(Note) Either) EitherT {
+	return EitherT{
+		Run: e.Run.Chain(func(n Either) Writer {
+			return n.Fold(
+				func(a Any) Any {
+					return Writer{}.Of(NewLeft(a))
+				},
+				func(a Any) Any {
+					return Writer{}.Of(f(a))
+				},
+			).(Writer)
+		}),
+	}
 }
