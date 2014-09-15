@@ -2,55 +2,51 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/SimonRichardson/pipes/pipes"
 )
 
-type Sum struct {
+type Semigroup interface {
+	Concat(a pipes.Any) pipes.Any
+}
+
+type Int struct {
 	x int
 }
 
-func NewSum(x int) Sum {
-	return Sum{
+func NewInt(x int) Int {
+	return Int{
 		x: x,
 	}
 }
 
-func (x Sum) Of(v int) Sum {
-	return NewSum(v)
+func (i Int) Concat(a pipes.Any) pipes.Any {
+	return i.x + a.(int)
 }
 
-func (x Sum) Empty() pipes.Note {
-	return NewSum(0)
+type Get interface {
+	Get() Int
 }
 
-func (x Sum) Chain(f func(int) Sum) Sum {
-	return f(x.x)
+type Sum struct{}
+
+func NewSum() Sum {
+	return Sum{}
 }
 
-func (x Sum) Map(f func(int) int) Sum {
-	return x.Chain(func(x int) Sum {
-		return NewSum(f(x))
-	})
-}
-
-func (x Sum) Concat(y Sum) Sum {
-	return x.Chain(func(a int) Sum {
-		return y.Map(func(b int) int {
-			return a + b
-		})
-	})
-}
-
-func (x Sum) String() string {
-	return strconv.Itoa(x.x)
+func (s Sum) GetValue() pipes.Reader {
+	return pipes.Reader{
+		Run: func(e pipes.Any) pipes.Any {
+			return e.(Get).Get()
+		},
+	}
 }
 
 type AddCommand struct{}
 
 func (c AddCommand) Execute(note pipes.Note) pipes.CommandResult {
-	return pipes.ContinueResult(note.(Sum).Concat(NewSum(1)))
+	fmt.Println(run(note.(Sum).GetValue()))
+	return pipes.ContinueResult(note)
 }
 
 type BadCommand struct{}
@@ -60,8 +56,10 @@ func (c BadCommand) Execute(note pipes.Note) pipes.CommandResult {
 }
 
 func main() {
+	conf := NewConf(NewInt(1))
+
 	// Run the commands manually
-	x := pipes.EitherT{}.Of(NewSum(1)).
+	x := pipes.EitherT{}.Of(NewSum()).
 		Eff(pipes.Do(AddCommand{})).
 		Eff(pipes.Do(BadCommand{})).
 		Eff(pipes.Do(AddCommand{}))
@@ -74,5 +72,5 @@ func main() {
 		AddCommand{},
 	}
 	y := pipes.NewRunner(commands)
-	fmt.Println("Runner : ", y.Exec(NewSum(1)))
+	fmt.Println("Runner : ", y.Exec(NewSum()))
 }
