@@ -21,32 +21,60 @@ func NewInt(x int) Int {
 }
 
 func (i Int) Concat(a pipes.Any) pipes.Any {
-	return i.x + a.(int)
+	return NewInt(i.x + a.(Int).x)
 }
 
-type Get interface {
-	Get() Int
+func (i Int) Extract() int {
+	return i.x
 }
 
-type Sum struct{}
-
-func NewSum() Sum {
-	return Sum{}
+type Val struct {
+	x Int
 }
 
-func (s Sum) GetValue() pipes.Reader {
+func NewVal(x Int) Val {
+	return Val{
+		x: x,
+	}
+}
+
+func (s Val) Sum() pipes.Reader {
 	return pipes.Reader{
 		Run: func(e pipes.Any) pipes.Any {
-			return e.(Get).Get()
+			return e.(Int).Concat(s.x)
 		},
 	}
 }
 
-type AddCommand struct{}
+type Conf struct {
+	x Val
+}
+
+func NewConf(x Val) Conf {
+	return Conf{
+		x: x,
+	}
+}
+
+func (c Conf) Map(f func(Val) Val) Conf {
+	return NewConf(f(c.x))
+}
+
+type AddCommand struct {
+	x Int
+}
+
+func NewAddCommand(x Int) AddCommand {
+	return AddCommand{
+		x: x,
+	}
+}
 
 func (c AddCommand) Execute(note pipes.Note) pipes.CommandResult {
-	fmt.Println(run(note.(Sum).GetValue()))
-	return pipes.ContinueResult(note)
+	conf := note.(Conf).Map(func(x Val) Val {
+		return NewVal(x.Sum().Run(c.x).(Int))
+	})
+	return pipes.ContinueResult(conf)
 }
 
 type BadCommand struct{}
@@ -56,21 +84,12 @@ func (c BadCommand) Execute(note pipes.Note) pipes.CommandResult {
 }
 
 func main() {
-	conf := NewConf(NewInt(1))
+	conf := NewConf(NewVal(NewInt(0)))
 
 	// Run the commands manually
-	x := pipes.EitherT{}.Of(NewSum()).
-		Eff(pipes.Do(AddCommand{})).
-		Eff(pipes.Do(BadCommand{})).
-		Eff(pipes.Do(AddCommand{}))
+	x := pipes.EitherT{}.Of(conf).
+		Eff(pipes.Do(NewAddCommand(NewInt(1)))).
+		Eff(pipes.Do(NewAddCommand(NewInt(1)))).
+		Eff(pipes.Do(NewAddCommand(NewInt(1))))
 	fmt.Println("Manual : ", x.Run.Run())
-
-	// Run the commands in a runner
-	commands := []pipes.Command{
-		AddCommand{},
-		BadCommand{},
-		AddCommand{},
-	}
-	y := pipes.NewRunner(commands)
-	fmt.Println("Runner : ", y.Exec(NewSum()))
 }
