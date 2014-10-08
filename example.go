@@ -2,77 +2,108 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/SimonRichardson/pipes/pipes"
 )
 
-type Sum struct {
+type Semigroup interface {
+	Concat(a pipes.Any) pipes.Any
+}
+
+type Int struct {
 	x int
 }
 
-func NewSum(x int) Sum {
-	return Sum{
+func NewInt(x int) Int {
+	return Int{
 		x: x,
 	}
 }
 
-func (x Sum) Of(v int) Sum {
-	return NewSum(v)
+func (i Int) Concat(a pipes.Any) pipes.Any {
+	return NewInt(i.x + a.(Int).x)
 }
 
-func (x Sum) Empty() pipes.Note {
-	return NewSum(0)
+func (i Int) Extract() int {
+	return i.x
 }
 
-func (x Sum) Chain(f func(int) Sum) Sum {
-	return f(x.x)
+func (i Int) String() string {
+	return fmt.Sprintf("%d", i.x)
 }
 
-func (x Sum) Map(f func(int) int) Sum {
-	return x.Chain(func(x int) Sum {
-		return NewSum(f(x))
-	})
+type Val struct {
+	x Int
 }
 
-func (x Sum) Concat(y Sum) Sum {
-	return x.Chain(func(a int) Sum {
-		return y.Map(func(b int) int {
-			return a + b
-		})
-	})
+func NewVal(x Int) Val {
+	return Val{
+		x: x,
+	}
 }
 
-func (x Sum) String() string {
-	return strconv.Itoa(x.x)
+func (s Val) Sum() pipes.Reader {
+	return pipes.Reader{
+		Run: func(e pipes.Any) pipes.Any {
+			return e.(Int).Concat(s.x)
+		},
+	}
 }
 
-type AddCommand struct{}
+func (s Val) String() string {
+	return s.x.String()
+}
+
+type Conf struct {
+	x Val
+}
+
+func NewConf(x Val) Conf {
+	return Conf{
+		x: x,
+	}
+}
+
+func (c Conf) Map(f func(Val) Val) Conf {
+	return NewConf(f(c.x))
+}
+
+func (c Conf) String() string {
+	return c.x.String()
+}
+
+type AddCommand struct {
+	x Int
+}
+
+func NewAddCommand() AddCommand {
+	return AddCommand{
+		x: NewInt(1),
+	}
+}
 
 func (c AddCommand) Execute(note pipes.Note) pipes.CommandResult {
-	return pipes.ContinueResult(note.(Sum).Concat(NewSum(1)))
+	return pipes.ContinueResult(note.(Conf).Map(func(x Val) Val {
+		return NewVal(x.Sum().Run(c.x).(Int))
+	}))
 }
 
 type BadCommand struct{}
+
+func NewBadCommand() BadCommand {
+	return BadCommand{}
+}
 
 func (c BadCommand) Execute(note pipes.Note) pipes.CommandResult {
 	return pipes.BreakResult(note)
 }
 
 func main() {
-	// Run the commands manually
-	x := pipes.EitherT{}.Of(NewSum(1)).
-		Eff(pipes.Do(AddCommand{})).
-		Eff(pipes.Do(BadCommand{})).
-		Eff(pipes.Do(AddCommand{}))
-	fmt.Println("Manual : ", x.Run.Run())
+	conf := NewConf(NewVal(NewInt(0)))
 
-	// Run the commands in a runner
-	commands := []pipes.Command{
-		AddCommand{},
-		BadCommand{},
-		AddCommand{},
-	}
-	y := pipes.NewRunner(commands)
-	fmt.Println("Runner : ", y.Exec(NewSum(1)))
+	x := pipes.EitherT{}.Of(conf).
+		Eff(pipes.Do(NewAddCommand())).
+		Eff(pipes.Do(NewAddCommand())).
+		Eff(pipes.Do(NewAddCommand()))
+	fmt.Println("Manual : ", x.Run.Run())
 }
