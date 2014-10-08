@@ -28,6 +28,10 @@ func (i Int) Extract() int {
 	return i.x
 }
 
+func (i Int) String() string {
+	return fmt.Sprintf("%d", i.x)
+}
+
 type Val struct {
 	x Int
 }
@@ -46,6 +50,10 @@ func (s Val) Sum() pipes.Reader {
 	}
 }
 
+func (s Val) String() string {
+	return s.x.String()
+}
+
 type Conf struct {
 	x Val
 }
@@ -60,24 +68,31 @@ func (c Conf) Map(f func(Val) Val) Conf {
 	return NewConf(f(c.x))
 }
 
+func (c Conf) String() string {
+	return c.x.String()
+}
+
 type AddCommand struct {
 	x Int
 }
 
-func NewAddCommand(x Int) AddCommand {
+func NewAddCommand() AddCommand {
 	return AddCommand{
-		x: x,
+		x: NewInt(1),
 	}
 }
 
 func (c AddCommand) Execute(note pipes.Note) pipes.CommandResult {
-	conf := note.(Conf).Map(func(x Val) Val {
+	return pipes.ContinueResult(note.(Conf).Map(func(x Val) Val {
 		return NewVal(x.Sum().Run(c.x).(Int))
-	})
-	return pipes.ContinueResult(conf)
+	}))
 }
 
 type BadCommand struct{}
+
+func NewBadCommand() BadCommand {
+	return BadCommand{}
+}
 
 func (c BadCommand) Execute(note pipes.Note) pipes.CommandResult {
 	return pipes.BreakResult(note)
@@ -86,10 +101,9 @@ func (c BadCommand) Execute(note pipes.Note) pipes.CommandResult {
 func main() {
 	conf := NewConf(NewVal(NewInt(0)))
 
-	// Run the commands manually
 	x := pipes.EitherT{}.Of(conf).
-		Eff(pipes.Do(NewAddCommand(NewInt(1)))).
-		Eff(pipes.Do(NewAddCommand(NewInt(1)))).
-		Eff(pipes.Do(NewAddCommand(NewInt(1))))
+		Eff(pipes.Do(NewAddCommand())).
+		Eff(pipes.Do(NewAddCommand())).
+		Eff(pipes.Do(NewAddCommand()))
 	fmt.Println("Manual : ", x.Run.Run())
 }

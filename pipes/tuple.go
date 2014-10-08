@@ -1,5 +1,7 @@
 package pipes
 
+import "fmt"
+
 type Tuple struct {
 	_1 Either
 	_2 []Either
@@ -18,4 +20,8 @@ func (t Tuple) Fst() Either {
 
 func (t Tuple) Snd() []Either {
 	return t._2
+}
+
+func (t Tuple) String() string {
+	return fmt.Sprintf("(%v, %v)", t._1.(Show).String(), t._2)
 }
